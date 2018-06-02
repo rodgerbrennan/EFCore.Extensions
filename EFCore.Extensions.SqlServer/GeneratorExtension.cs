@@ -100,7 +100,6 @@ namespace EFCore.Extensions.SqlServer
                 sBuilder.Append("EXECUTE sp_executesql N'UPDATE ");
                 sBuilder.Append(tableName);
                 sBuilder.Append(" SET ");
-                //sBuilder.Append("(");
 
                 //We'll need this list later to deal with only the necesary parameters in order
                 var handledProperties = GetPropertiesToHandle(entry);
@@ -224,7 +223,6 @@ namespace EFCore.Extensions.SqlServer
             
             sBuilder.Append(GenerateParameterName(position));
             sBuilder.Append(" = ");
-            //var prop = handledProperties[i];
             if (IsQuoteNeededForProperty(prop.Metadata.SqlServer().ColumnType))
             {
                 //quote property
