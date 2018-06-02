@@ -10,7 +10,7 @@ EFCore.Extensions is intended to be a set of useful extensions to [Entity Framew
 
 - Add more comprehensive testing
 - Add support for streams so statements can be stored to files more readily
-- Add support for addional databases
+- Add support for additional databases
 - Add Bulk capabilities
 - Add an extension method to obtain sql query statements
 
