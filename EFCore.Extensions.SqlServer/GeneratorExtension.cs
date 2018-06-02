@@ -18,8 +18,6 @@ namespace EFCore.Extensions.SqlServer
         {
             var sBuilder = new StringBuilder();
 
-            var contextChanges = context.ChangeTracker.Entries();
-
             var sqlMapper = new SqlServerTypeMapper(new RelationalTypeMapperDependencies());
 
             var entries = context.ChangeTracker.Entries();
