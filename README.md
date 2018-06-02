@@ -17,7 +17,9 @@ EFCore.Extensions is intended to be a set of useful extensions to [Entity Framew
 ### Notes:
 
 ***This is alpha software***
+
 **Currently it is only tested as working with Entity Framework Core 2.0.3**
+
 Entity Framework Core 2.1.0 has changes that will require this code to be modified in order to work. Specifically, SqlServerTypeMapper has been removed
 
 ***If you're looking for a .ToSql() extension, one was posted by [Smit Patel] on [Issue 9414]***
