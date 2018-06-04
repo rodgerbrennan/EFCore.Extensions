@@ -5,11 +5,11 @@ EFCore.Extensions is intended to be a set of useful extensions to [Entity Framew
 # Current Features
 
 - Generate T-SQL DML statements from the Entity Framework change tracker for Microsoft Sql Server
+- Supports the use of Streams to capture statements for futher processing or storage
 
 ### Roadmap:
 
 - Add more comprehensive testing
-- Add support for streams so statements can be stored to files more readily
 - Add support for additional databases
 - Add Bulk capabilities
 - Add an extension method to obtain sql query statements
