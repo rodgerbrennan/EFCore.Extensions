@@ -4,10 +4,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using SuccincT.Unions;
 using System.IO;
 
@@ -21,7 +19,6 @@ namespace EFCore.Extensions.SqlServer
             writer.Match()
                 .CaseOf<StringBuilder>().Do(x => x.Append(value))
                 .CaseOf<StreamWriter>().Do(x => { x.Write(value);
-                                                  //x.Flush();
                 })
                 .Exec();
         }
@@ -61,13 +58,6 @@ namespace EFCore.Extensions.SqlServer
 
         public static void Generate(this DbContext @context, Union<StringBuilder, StreamWriter> writer)
         {
-            //var writer = (stream == null) ? new Union<StringBuilder, StreamWriter>(new StringBuilder()) :
-            //                                new Union<StringBuilder, StreamWriter>(new StreamWriter(stream));
-
-
-            //writer.Append("test");
-
-            //var sBuilder = new StringBuilder();
 
             var sqlMapper = new SqlServerTypeMapper(new RelationalTypeMapperDependencies());
 
@@ -89,7 +79,6 @@ namespace EFCore.Extensions.SqlServer
             GenerateUpdates(writer, context, updatedEntities, sqlMapper);
             GenerateDeletes(writer, context, deletedEntities, sqlMapper);            
 
-            //return (T) Convert.ChangeType(writer, typeof(T));
         }
 
         private static void GenerateInserts(Union<StringBuilder, StreamWriter> sBuilder, DbContext context, IEnumerable<EntityEntry> entries, SqlServerTypeMapper mapper)
