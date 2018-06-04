@@ -292,3 +292,10 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 *.g.targets
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

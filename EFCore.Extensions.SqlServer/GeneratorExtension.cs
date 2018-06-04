@@ -8,15 +8,66 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SuccincT.Unions;
+using System.IO;
 
 namespace EFCore.Extensions.SqlServer
 {
     public static class GeneratorExtension
     {
 
+        public static void Append(this Union<StringBuilder, StreamWriter> writer, string value)
+        {
+            writer.Match()
+                .CaseOf<StringBuilder>().Do(x => x.Append(value))
+                .CaseOf<StreamWriter>().Do(x => { x.Write(value);
+                                                  //x.Flush();
+                })
+                .Exec();
+        }
+
+        public static void AppendLine(this Union<StringBuilder, StreamWriter> writer, string value)
+        {
+            writer.Match()
+                .CaseOf<StringBuilder>().Do(x => x.AppendLine(value))
+                .CaseOf<StreamWriter>().Do(x => x.WriteLine(value))
+                .Exec();
+        }
+
         public static string Generate(this DbContext @context)
         {
             var sBuilder = new StringBuilder();
+            var writer = new Union<StringBuilder, StreamWriter>(sBuilder);
+
+            Generate(context, writer);
+
+            var str = writer.Match<StringBuilder>()
+                            .CaseOf<StringBuilder>().Do(x => x)
+                            .Result();
+
+            return str.ToString();
+        }
+
+        public static void Generate(this DbContext @context, Stream stream)
+        {
+            var sWriter = new StreamWriter(stream);
+            var writer = new Union<StringBuilder, StreamWriter>(sWriter);
+            Generate(context, writer);
+            writer.Match()
+                .CaseOf<StreamWriter>().Do(x => x.Flush())
+                .Exec();
+
+        }
+
+        public static void Generate(this DbContext @context, Union<StringBuilder, StreamWriter> writer)
+        {
+            //var writer = (stream == null) ? new Union<StringBuilder, StreamWriter>(new StringBuilder()) :
+            //                                new Union<StringBuilder, StreamWriter>(new StreamWriter(stream));
+
+
+            //writer.Append("test");
+
+            //var sBuilder = new StringBuilder();
 
             var sqlMapper = new SqlServerTypeMapper(new RelationalTypeMapperDependencies());
 
@@ -34,14 +85,14 @@ namespace EFCore.Extensions.SqlServer
                                    where ent.State == EntityState.Deleted
                                    select ent);
 
-            GenerateInserts(sBuilder, context, addedEntities, sqlMapper);
-            GenerateUpdates(sBuilder, context, updatedEntities, sqlMapper);
-            GenerateDeletes(sBuilder, context, deletedEntities, sqlMapper);
+            GenerateInserts(writer, context, addedEntities, sqlMapper);
+            GenerateUpdates(writer, context, updatedEntities, sqlMapper);
+            GenerateDeletes(writer, context, deletedEntities, sqlMapper);            
 
-            return sBuilder.ToString();
+            //return (T) Convert.ChangeType(writer, typeof(T));
         }
 
-        private static void GenerateInserts(StringBuilder sBuilder, DbContext context, IEnumerable<EntityEntry> entries, SqlServerTypeMapper mapper)
+        private static void GenerateInserts(Union<StringBuilder, StreamWriter> sBuilder, DbContext context, IEnumerable<EntityEntry> entries, SqlServerTypeMapper mapper)
         {
             
             foreach (var entry in entries)
@@ -87,7 +138,7 @@ namespace EFCore.Extensions.SqlServer
 
         }
 
-        private static void GenerateUpdates(StringBuilder sBuilder, DbContext context, IEnumerable<EntityEntry> entries, SqlServerTypeMapper mapper)
+        private static void GenerateUpdates(Union<StringBuilder, StreamWriter> sBuilder, DbContext context, IEnumerable<EntityEntry> entries, SqlServerTypeMapper mapper)
         {
             
             foreach (var entry in entries)
@@ -124,7 +175,7 @@ namespace EFCore.Extensions.SqlServer
 
         }
 
-        private static void GenerateDeletes(StringBuilder sBuilder, DbContext context, IEnumerable<EntityEntry> entries, SqlServerTypeMapper mapper)
+        private static void GenerateDeletes(Union<StringBuilder, StreamWriter> sBuilder, DbContext context, IEnumerable<EntityEntry> entries, SqlServerTypeMapper mapper)
         {
             
             foreach (var entry in entries)
@@ -179,7 +230,7 @@ namespace EFCore.Extensions.SqlServer
             return handledProperties;
         }
 
-        private static void GenerateParameterTypeString(StringBuilder sBuilder, PropertyEntry prop, int position)
+        private static void GenerateParameterTypeString(Union<StringBuilder, StreamWriter> sBuilder, PropertyEntry prop, int position)
         {
             
             sBuilder.Append(GenerateParameterName(position));
@@ -188,7 +239,7 @@ namespace EFCore.Extensions.SqlServer
             
         }
 
-        private static void GenerateParameterTypeDefinitions(StringBuilder sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount, PropertyEntry primaryKey)
+        private static void GenerateParameterTypeDefinitions(Union<StringBuilder, StreamWriter> sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount, PropertyEntry primaryKey)
         {
 
             for (var i = 0; i < handledPropertyCount; i++)
@@ -199,14 +250,14 @@ namespace EFCore.Extensions.SqlServer
 
             if (primaryKey != null)
             {
-                sBuilder.Append(',');
+                sBuilder.Append(",");
                 GenerateParameterTypeString(sBuilder, primaryKey, handledPropertyCount);
             }
 
             sBuilder.Append("'");
         }
 
-        private static void GenerateParameterValues(StringBuilder sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount)
+        private static void GenerateParameterValues(Union<StringBuilder, StreamWriter> sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount)
         {
             
             for (var i = 0; i < handledPropertyCount; i++)
@@ -216,7 +267,7 @@ namespace EFCore.Extensions.SqlServer
 
         }
 
-        private static void GenerateParameterValueString(StringBuilder sBuilder, PropertyEntry prop, int position)
+        private static void GenerateParameterValueString(Union<StringBuilder, StreamWriter> sBuilder, PropertyEntry prop, int position)
         {
             
             sBuilder.Append(GenerateParameterName(position));
@@ -225,7 +276,7 @@ namespace EFCore.Extensions.SqlServer
             {
                 //quote property
                 sBuilder.Append("'");
-                sBuilder.Append(prop.CurrentValue);
+                sBuilder.Append(prop.CurrentValue.ToString());
                 sBuilder.Append("'");
             }
             else
@@ -242,13 +293,13 @@ namespace EFCore.Extensions.SqlServer
                 }
                 else
                 {
-                    sBuilder.Append(prop.CurrentValue);
+                    sBuilder.Append(prop.CurrentValue.ToString());
                 }
             }
 
         }
 
-        private static void GenerateParameterValue(StringBuilder sBuilder, PropertyEntry prop, int position, int handledPropertyCount)
+        private static void GenerateParameterValue(Union<StringBuilder, StreamWriter> sBuilder, PropertyEntry prop, int position, int handledPropertyCount)
         {
 
             GenerateParameterValueString(sBuilder, prop, position);
@@ -260,7 +311,7 @@ namespace EFCore.Extensions.SqlServer
             }            
         }
 
-        private static void GenerateParameterValues(StringBuilder sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount, PropertyEntry primaryKey)
+        private static void GenerateParameterValues(Union<StringBuilder, StreamWriter> sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount, PropertyEntry primaryKey)
         {
             
             GenerateParameterValues(sBuilder, handledProperties, handledPropertyCount);
@@ -273,7 +324,7 @@ namespace EFCore.Extensions.SqlServer
 
         }
 
-        private static void  GenerateParameters(StringBuilder sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount, PropertyEntry primaryKey)
+        private static void  GenerateParameters(Union<StringBuilder, StreamWriter> sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount, PropertyEntry primaryKey)
         {
 
             GenerateParameterTypeDefinitions(sBuilder, handledProperties, handledPropertyCount, primaryKey);            
@@ -284,7 +335,7 @@ namespace EFCore.Extensions.SqlServer
             GenerateParameterValues(sBuilder, handledProperties, handledPropertyCount, primaryKey);            
         }
 
-        private static void GenerateParameters(StringBuilder sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount)
+        private static void GenerateParameters(Union<StringBuilder, StreamWriter> sBuilder, List<PropertyEntry> handledProperties, int handledPropertyCount)
         {
 
             GenerateParameters(sBuilder, handledProperties, handledPropertyCount, null);
@@ -303,7 +354,7 @@ namespace EFCore.Extensions.SqlServer
             return "@p" + position;
         }
 
-        private static void GenerateColumnName(StringBuilder sBuilder, PropertyEntry property)
+        private static void GenerateColumnName(Union<StringBuilder, StreamWriter> sBuilder, PropertyEntry property)
         {
 
             sBuilder.Append("[");

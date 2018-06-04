@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.0.3" />
+    <PackageReference Include="SuccincT" Version="3.2.0" />
   </ItemGroup>
 
 </Project>
